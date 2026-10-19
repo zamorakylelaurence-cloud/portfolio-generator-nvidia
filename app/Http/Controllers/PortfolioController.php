@@ -192,7 +192,12 @@ class PortfolioController extends Controller
             'contact_number' => ['nullable', 'string', 'max:40'],
             'address' => ['nullable', 'string', 'max:255'],
             'about_me' => ['nullable', 'string', 'max:5000'],
-            'profile_picture' => ['nullable', 'image', 'max:4096'],
+            'profile_picture' => [
+             'nullable',
+             'image',
+                'mimes:jpg,jpeg,png,webp',
+                 'max:7168',
+                    ],
             'education_text' => ['nullable', 'string', 'max:5000'],
             'skills_text' => ['nullable', 'string', 'max:3000'],
             'projects_text' => ['nullable', 'string', 'max:6000'],

@@ -22,6 +22,9 @@ WORKDIR /var/www/html
 
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+RUN echo "upload_max_filesize=10M" > $PHP_INI_DIR/conf.d/uploads.ini \
+ && echo "post_max_size=12M" >> $PHP_INI_DIR/conf.d/uploads.ini
+
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction

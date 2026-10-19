@@ -25,7 +25,7 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
+RUN php artisan storage:link
 RUN npm install && npm run build
 
 RUN mkdir -p storage/framework/cache \

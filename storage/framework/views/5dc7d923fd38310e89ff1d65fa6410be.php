@@ -497,19 +497,28 @@
             </a>
 
             <nav class="nav-links">
-                <a href="<?php echo e(route('home')); ?>">Home</a>
+    <a href="<?php echo e(route('home')); ?>">Home</a>
 
-                <a href="<?php echo e(route('portfolios.index')); ?>">
-                    Manage Portfolios
-                </a>
+    <?php if(auth()->guard()->check()): ?>
+        <a href="<?php echo e(route('portfolios.index')); ?>">
+            Manage Portfolios
+        </a>
 
-                <a
-                    class="btn small"
-                    href="<?php echo e(route('portfolios.create')); ?>"
-                >
-                    + Create portfolio
-                </a>
-            </nav>
+        <a class="btn small" href="<?php echo e(route('portfolios.create')); ?>">
+            + Create portfolio
+        </a>
+
+        <form action="<?php echo e(route('logout')); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <button type="submit" class="btn small secondary">
+                Log out
+            </button>
+        </form>
+    <?php else: ?>
+        <a href="<?php echo e(route('login')); ?>">Log in</a>
+        <a href="<?php echo e(route('register')); ?>">Register</a>
+    <?php endif; ?>
+</nav>
 
         </div>
     </header>

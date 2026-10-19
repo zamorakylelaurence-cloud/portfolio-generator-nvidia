@@ -22,4 +22,8 @@ class Portfolio extends Model
             'links' => 'array',
         ];
     }
+    public function user()
+{
+    return $this->belongsTo(\App\Models\User::class);
+}
 }

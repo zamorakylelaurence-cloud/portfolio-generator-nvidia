@@ -25,7 +25,7 @@
                 class="muted"
                 style="font-size: 1.12rem; max-width: 570px;"
             >
-                Create your professional portfolio in minutes.
+                Create your professional portfolio for free in minutes.
                 Add your details, There are three design templates to choose from,
                 and preview your personal website in one place.
             </p>
@@ -113,7 +113,7 @@
                 01 / Add
             </div>
 
-            <h3>Enter your story</h3>
+            <h3>Enter your information</h3>
 
             <p class="muted">
                 Personal details, education, skills,
@@ -129,7 +129,7 @@
                 02 / Design
             </div>
 
-            <h3>Choose a style</h3>
+            <h3>Choose a template</h3>
 
             <p class="muted">
                 Pick Simple, Modern, or Creative,

@@ -4,6 +4,7 @@ FROM php:8.3-apache
 RUN apt-get update && apt-get install -y \
     git unzip libpq-dev libzip-dev \
     libonig-dev libxml2-dev curl \
+    nodejs npm \
     && docker-php-ext-install pdo_pgsql mbstring bcmath zip \
     && a2enmod rewrite \
     && apt-get clean \
@@ -23,6 +24,8 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+RUN npm install && npm run build
 
 RUN mkdir -p storage/framework/cache \
     storage/framework/sessions \

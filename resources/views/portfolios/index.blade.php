@@ -1,18 +1,99 @@
-
 @extends('layouts.app')
 
 @section('title', 'Manage Portfolios')
 
 @section('content')
+    <style>
+        .portfolio-card {
+            position: relative;
+        }
 
-    {{-- Page heading and create button --}}
+        .portfolio-menu {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+
+        .portfolio-menu summary {
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            border: 1px solid #484848;
+            border-radius: 10px;
+            background: #171717;
+            color: #f5f5f5;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            list-style: none;
+        }
+
+        .portfolio-menu summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .portfolio-menu summary:hover,
+        .portfolio-menu summary:focus-visible {
+            border-color: #76b900;
+            outline: none;
+        }
+
+        .portfolio-menu-panel {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 190px;
+            padding: 6px;
+            border: 1px solid #484848;
+            border-radius: 12px;
+            background: #242424;
+            box-shadow: 0 12px 30px #0008;
+        }
+
+        .portfolio-menu-panel a,
+        .portfolio-menu-panel button {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #f5f5f5;
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+            text-decoration: none;
+        }
+
+        .portfolio-menu-panel a:hover,
+        .portfolio-menu-panel button:hover,
+        .portfolio-menu-panel a:focus-visible,
+        .portfolio-menu-panel button:focus-visible {
+            background: #353535;
+            outline: none;
+        }
+
+        .portfolio-menu-panel .delete-action {
+            color: #ff9a9a;
+        }
+
+        .portfolio-menu-panel .delete-action:hover,
+        .portfolio-menu-panel .delete-action:focus-visible {
+            background: #3a1919;
+        }
+
+        .portfolio-menu-panel form {
+            margin: 0;
+        }
+    </style>
+
     <div
         style="display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px"
     >
         <div>
-            <div class="eyebrow">
-                Your saved work
-            </div>
+            <div class="eyebrow">Your saved work</div>
 
             <h1 style="font-size: 2.6rem; margin-bottom: 8px">
                 Manage portfolios
@@ -28,7 +109,6 @@
         </a>
     </div>
 
-    {{-- Empty state --}}
     @if ($portfolios->isEmpty())
         <div class="card" style="text-align: center; padding: 50px 22px">
             <h2>No portfolios yet</h2>
@@ -42,22 +122,50 @@
             </a>
         </div>
     @else
-
-        {{-- Portfolio cards --}}
         <div class="grid">
-
             @foreach ($portfolios as $portfolio)
-                <article class="card">
+                <article class="card portfolio-card">
+                    <details class="portfolio-menu">
+                        <summary aria-label="Portfolio actions" title="Portfolio actions">
+                            <span aria-hidden="true">⋮</span>
+                        </summary>
 
-                    {{-- Profile picture and basic information --}}
+                        <div class="portfolio-menu-panel">
+                            <a href="{{ route('portfolios.preview', $portfolio) }}">
+                                View
+                            </a>
+
+                            <a href="{{ route('portfolios.edit', $portfolio) }}">
+                                Edit
+                            </a>
+
+                            <a href="{{ route('portfolios.templates', $portfolio) }}">
+                                Change template
+                            </a>
+
+                            <form
+                                method="POST"
+                                action="{{ route('portfolios.destroy', $portfolio) }}"
+                                onsubmit="return confirm('Delete this portfolio permanently?')"
+                            >
+                                @csrf
+                                @method('DELETE')
+
+                                <button class="delete-action" type="submit">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </details>
+
                     <div
-                        style="display: flex; align-items: center; gap: 13px; margin-bottom: 16px"
+                        style="display: flex; align-items: center; gap: 13px; margin-bottom: 16px; padding-right: 42px"
                     >
                         @if ($portfolio->profile_picture)
                             <img
                                 class="profile-img"
                                 style="width: 58px; height: 58px"
-                                src="{{ asset('storage/' . $portfolio->profile_picture) }}"
+                                src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($portfolio->profile_picture) }}"
                                 alt="Profile picture"
                             >
                         @else
@@ -79,7 +187,6 @@
                         </div>
                     </div>
 
-                    {{-- Template information --}}
                     <p>
                         <span class="pill">
                             {{ ucfirst($portfolio->template) }} template
@@ -89,52 +196,8 @@
                     <p class="muted" style="font-size: 0.88rem">
                         Updated {{ $portfolio->updated_at->format('M j, Y') }}
                     </p>
-
-                    {{-- Portfolio actions --}}
-                    <div class="actions">
-                        <a
-                            class="btn small"
-                            href="{{ route('portfolios.preview', $portfolio) }}"
-                        >
-                            View
-                        </a>
-
-                        <a
-                            class="btn secondary small"
-                            href="{{ route('portfolios.edit', $portfolio) }}"
-                        >
-                            Edit
-                        </a>
-
-                        <a
-                            class="btn outline small"
-                            href="{{ route('portfolios.templates', $portfolio) }}"
-                        >
-                            Change template
-                        </a>
-                    </div>
-
-                    {{-- Delete portfolio --}}
-                    <form
-                        method="POST"
-                        action="{{ route('portfolios.destroy', $portfolio) }}"
-                        style="margin-top: 12px"
-                        onsubmit="return confirm('Delete this portfolio permanently?')"
-                    >
-                        @csrf
-                        @method('DELETE')
-
-                        <button class="btn danger small" type="submit">
-                            Delete
-                        </button>
-                    </form>
-
                 </article>
             @endforeach
-
         </div>
-
     @endif
-
 @endsection
-

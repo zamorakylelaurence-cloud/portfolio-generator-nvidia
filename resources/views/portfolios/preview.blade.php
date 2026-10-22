@@ -69,7 +69,7 @@
                 @if ($portfolio->profile_picture)
                     <img
                         class="profile-img"
-                        src="{{ asset('storage/' . $portfolio->profile_picture) }}"
+                        src="{{ \Illuminate\Support\Facades\Storage::disk('s3')->url($portfolio->profile_picture) }}"
                         alt="Profile picture of {{ $portfolio->full_name }}"
                     >
                 @else
@@ -202,9 +202,9 @@
 
         <a
             class="btn"
-            href="{{ route('portfolios.templates', $portfolio) }}"
+            href="{{ route('portfolios.create') }}"
         >
-            Generate with another template
+            Create another portfolio
         </a>
     </div>
 

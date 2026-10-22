@@ -497,26 +497,16 @@
             </a>
 
             <nav class="nav-links">
-    <a href="{{ route('home') }}">Home</a>
 
     @auth
-        <a href="{{ route('portfolios.index') }}">
-            Manage Portfolios
-        </a>
-
-        <a class="btn small" href="{{ route('portfolios.create') }}">
-            + Create portfolio
-        </a>
-
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="btn small secondary">
                 Log out
             </button>
         </form>
+
     @else
-        <a href="{{ route('login') }}">Log in</a>
-        <a href="{{ route('register') }}">Register</a>
     @endauth
 </nav>
 

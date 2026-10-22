@@ -6,6 +6,7 @@ use App\Models\Portfolio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +40,6 @@ class PortfolioController extends Controller
     {
         $data = $this->validatedData($request);
 
-        // Assign the portfolio to the currently logged-in user.
         $portfolio = new Portfolio($data);
         $portfolio->user_id = Auth::id();
         $portfolio->save();
@@ -66,7 +66,7 @@ class PortfolioController extends Controller
         $data = $this->validatedData($request);
 
         if (!empty($data['profile_picture']) && $portfolio->profile_picture) {
-            Storage::disk('public')->delete($portfolio->profile_picture);
+            Storage::disk('s3')->delete($portfolio->profile_picture);
         }
 
         $portfolio->update($data);
@@ -81,7 +81,7 @@ class PortfolioController extends Controller
         $this->authorizePortfolio($portfolio);
 
         if ($portfolio->profile_picture) {
-            Storage::disk('public')->delete($portfolio->profile_picture);
+            Storage::disk('s3')->delete($portfolio->profile_picture);
         }
 
         $portfolio->delete();
@@ -133,13 +133,13 @@ class PortfolioController extends Controller
 
         if (
             $portfolio->profile_picture &&
-            Storage::disk('public')->exists($portfolio->profile_picture)
+            Storage::disk('s3')->exists($portfolio->profile_picture)
         ) {
-            $image = Storage::disk('public')->get(
+            $image = Storage::disk('s3')->get(
                 $portfolio->profile_picture
             );
 
-            $mime = Storage::disk('public')->mimeType(
+            $mime = Storage::disk('s3')->mimeType(
                 $portfolio->profile_picture
             );
 
@@ -186,24 +186,66 @@ class PortfolioController extends Controller
 
     private function validatedData(Request $request): array
     {
-        $data = $request->validate([
-            'full_name' => ['required', 'string', 'max:120'],
+        $validator = Validator::make($request->all(), [
+            'full_name' => [
+                'required',
+                'string',
+                'max:120',
+                'regex:/^[\p{L}\p{M}][\p{L}\p{M}\s.\x{27}\x{2019}-]*$/u',
+            ],
             'email' => ['required', 'email', 'max:190'],
-            'contact_number' => ['nullable', 'string', 'max:40'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'about_me' => ['nullable', 'string', 'max:5000'],
+            'contact_number' => [
+                'required',
+                'string',
+                'max:40',
+                'regex:/^(?=.*[0-9])[0-9+\s().-]+$/',
+            ],
+            'address' => ['required', 'string', 'max:255'],
+            'about_me' => ['required', 'string', 'max:5000'],
             'profile_picture' => [
-             'nullable',
-             'image',
+                $request->isMethod('post') ? 'required' : 'nullable',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
-                 'max:7168',
-                    ],
-            'education_text' => ['nullable', 'string', 'max:5000'],
-            'skills_text' => ['nullable', 'string', 'max:3000'],
-            'projects_text' => ['nullable', 'string', 'max:6000'],
-            'experience_text' => ['nullable', 'string', 'max:6000'],
-            'links_text' => ['nullable', 'string', 'max:3000'],
+                'max:7168',
+            ],
+            'education_text' => ['required', 'string', 'max:5000'],
+            'skills_text' => ['required', 'string', 'max:3000'],
+            'projects_text' => ['required', 'string', 'max:6000'],
+            'experience_text' => ['required', 'string', 'max:6000'],
+            'links_text' => ['required', 'string', 'max:3000'],
         ]);
+
+        $listFields = [
+            'education_text',
+            'skills_text',
+            'projects_text',
+            'experience_text',
+            'links_text',
+        ];
+
+        $validator->after(function ($validator) use ($request, $listFields) {
+            foreach ($listFields as $field) {
+                $value = $request->input($field, '');
+
+                if (!is_string($value)) {
+                    continue;
+                }
+
+                $items = preg_split('/\r\n|\r|\n/', $value);
+                $hasItem = collect($items)->contains(
+                    fn ($item) => trim($item) !== ''
+                );
+
+                if (!$hasItem) {
+                    $validator->errors()->add(
+                        $field,
+                        'Please provide at least one item.'
+                    );
+                }
+            }
+        });
+
+        $data = $validator->validate();
 
         foreach ([
             'education_text' => 'education',
@@ -226,7 +268,7 @@ class PortfolioController extends Controller
         if ($request->hasFile('profile_picture')) {
             $data['profile_picture'] = $request
                 ->file('profile_picture')
-                ->store('portfolio-profiles', 'public');
+                ->store('portfolio-profiles', 's3');
         } else {
             unset($data['profile_picture']);
         }
